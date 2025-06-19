@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>RAG - Chess Theory</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/chessboard-1.0.0.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  <div id="question-section" class="centered-section">
+    <h1>♟️ RAG - Chess Theory</h1>
+
+    <input type="text" id="question" placeholder="Ask a chess question..." />
+
+    <div id="example-selector">
+      <select id="examples" onchange="fillExample(this.value)">
+        <option value="">-- Sample Questions --</option>
+        <option value="What is chess?">What is chess?</option>
+        <option value="What is a fork?">What is a fork?</option>
+        <option value="What is the most powerful piece in chess?">What is the most powerful piece in chess?</option>
+        <option value="How do you win in chess?">How do you win in chess?</option>
+      </select>
+    </div>
+
+    <button onclick="askQuestion()">Ask</button>
+  </div>
+
+  <div id="answer"></div>
+
+  <div id="opening-section" class="centered-section">
+    <h2 style="text-align: center;">Try your chess opening</h2>
+    <div id="board"></div>
+    <div style="margin-top: 10px;">
+      <button onclick="analyzeOpening()">Analyze Opening</button>
+      <button onclick="undoMove()">Undo Move</button>
+      <button onclick="resetBoard()">Reset Board</button>
+    </div>
+  </div>
+
+  <div id="opening-description"></div>
+
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.12.0/chess.min.js"></script>
+  <script src="{{ url_for('static', filename='js/chessboard-1.0.0.min.js') }}"></script>
+
+  <script>
+    const chess = new Chess();
+
+    const board = Chessboard('board', {
+      draggable: true,
+      position: 'start',
+      onDrop: onDrop,
+      pieceTheme: '/static/img/chesspieces/wikipedia/{piece}.png'
+    });
+
+    
+    function onDrop(source, target, piece, newPos, oldPos, orientation) {
+      const move = chess.move({
+        from: source,
+        to: target,
+        promotion: 'q'
+      });
+
+      if (move === null) return 'snapback';
+    }
+
+    function undoMove() {
+      chess.undo(); 
+      board.position(chess.fen()); 
+      console.log("Moves after undo:", chess.history().join(" "));
+    }
+
+    function resetBoard() {
+      chess.reset(); 
+      board.start(); 
+      document.getElementById("opening-description").style.display = "none";
+      document.getElementById("opening-description").innerHTML = "";
+      console.log("Board reset");
+    }
+
+    async function askQuestion() {
+      const question = document.getElementById("question").value;
+      const answerDiv = document.getElementById("answer");
+      answerDiv.innerHTML = "⏳ Thinking...";
+
+      const response = await fetch("/ask", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ question })
+      });
+
+      const data = await response.json();
+
+      if (data.answer) {
+        answerDiv.style.display = "block";
+        answerDiv.innerHTML = `<strong>Answer:</strong><br>${data.answer}`;
+      } else {
+        answerDiv.style.display = "block";
+        answerDiv.innerHTML = `<strong>Error:</strong> ${data.error}`;
+      }
+    }
+
+    async function analyzeOpening() {
+      const moves = chess.pgn();
+      const openingDiv = document.getElementById("opening-description");
+      openingDiv.innerHTML = "🔎 Analyzing opening...";
+
+      const response = await fetch("/analyze_opening", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ moves: moves })
+      });
+
+      const data = await response.json();
+
+      if (data.description) {
+        openingDiv.style.display = "block";
+        const formattedDescription = data.description
+          .replace(/\\n/g, '\n')  
+          .replace(/\n/g, '<br>');
+        openingDiv.innerHTML = `<strong>You just played the ${data.topic}</strong><br>${formattedDescription}`;
+      } else {
+        openingDiv.style.display = "block";
+        openingDiv.innerHTML = `<strong>Opening not recognized.</strong>`;
+      }
+    }
+
+    function fillExample(text) {
+      document.getElementById("question").value = text;
+      document.getElementById("examples").value = "";
+    }
+  </script>
+
+</body>
+</html>
