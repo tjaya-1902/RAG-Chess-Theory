@@ -17,10 +17,13 @@ Chess Opening:
 - If a match is found, the corresponding opening name and description are displayed.
 
 HTML Page View
+
 <img src="img/page_view.png" width="400"/>
 
 Sample Question and Answer
+
 <img src="img/sample_question_1.png" width="400"/>
 
 Sample Opening Description
+
 <img src="img/sample_opening_1.png" width="400"/>
