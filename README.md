@@ -16,14 +16,15 @@ Chess Opening:
 - The sequence of played moves is compared to a database of known openings.
 - If a match is found, the corresponding opening name and description are displayed.
 
-HTML Page View
+<div align="center">
 
+<h3>HTML Page View</h3>
 <img src="img/page_view.png" width="400"/>
 
-Sample Question and Answer
-
+<h3>Sample Question and Answer</h3>
 <img src="img/sample_question_1.png" width="400"/>
 
-Sample Opening Description
-
+<h3>Sample Opening Description</h3>
 <img src="img/sample_opening_1.png" width="400"/>
+
+</div>
